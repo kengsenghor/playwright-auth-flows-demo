@@ -153,7 +153,7 @@ Workflow: `.github/workflows/playwright.yml`.
   (no scheduled run). They do not run on every push, because each run hits the live site.
 - Find the report: Actions tab, open the run, **Summary** page, **Playwright report (one HTML file)**, **Open**. The full
   report with traces is under **Artifacts** (kept 14 days).
-- Required repository **variables**: `TARGET_APP_URL`, `TARGET_SSO_URL`.
+- Required: `TARGET_APP_URL`, `TARGET_SSO_URL` (as repository secrets or variables).
 - Optional repository secrets: `AUTH_TEST_USERNAME`, `AUTH_TEST_PASSWORD`, `SIGNUP_BASE_EMAIL`, `AUTH_SESSION_B64`
   (gzip + base64 of `.auth/user.json`). Setup commands are in the README's CI section. GitHub's cloud IPs meet the
   captcha more often, so expect more skips there.

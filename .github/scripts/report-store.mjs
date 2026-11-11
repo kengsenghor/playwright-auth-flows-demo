@@ -24,7 +24,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 // Environment variables whose VALUES must never reach the published site.
-const SECRET_ENV_NAMES = ['AUTH_TEST_USERNAME', 'AUTH_TEST_PASSWORD', 'SIGNUP_BASE_EMAIL', 'AUTH_SESSION_B64'];
+const SECRET_ENV_NAMES = ['AUTH_TEST_USERNAME', 'AUTH_TEST_PASSWORD', 'SIGNUP_BASE_EMAIL', 'AUTH_SESSION_B64', 'TARGET_APP_URL', 'TARGET_SSO_URL'];
 const MIN_SECRET_LENGTH = 4; // shorter values would mangle ordinary text
 
 const EMBED_RE = /(window\.playwrightReportBase64\s*=\s*")data:application\/zip;base64,([^"]*)(")/;

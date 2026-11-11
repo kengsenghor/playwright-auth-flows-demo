@@ -49,9 +49,10 @@ jobs:
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
       MAX_SKIPPED: ${{ inputs.max_skipped }}
-      # Required repository variables (Settings > Secrets and variables > Actions > Variables): the site under test.
-      TARGET_APP_URL: ${{ vars.TARGET_APP_URL }}
-      TARGET_SSO_URL: ${{ vars.TARGET_SSO_URL }}
+      # Required: the site under test. Store them as repository secrets (masked in public logs and redacted from the
+      # published report) or, alternatively, as repository variables.
+      TARGET_APP_URL: ${{ secrets.TARGET_APP_URL || vars.TARGET_APP_URL }}
+      TARGET_SSO_URL: ${{ secrets.TARGET_SSO_URL || vars.TARGET_SSO_URL }}
       # Optional repository secrets (Settings > Secrets and variables > Actions). Tests that need them skip when unset.
       AUTH_TEST_USERNAME: ${{ secrets.AUTH_TEST_USERNAME }}
       AUTH_TEST_PASSWORD: ${{ secrets.AUTH_TEST_PASSWORD }}
@@ -186,6 +187,8 @@ jobs:
           AUTH_TEST_PASSWORD: ${{ secrets.AUTH_TEST_PASSWORD }}
           SIGNUP_BASE_EMAIL: ${{ secrets.SIGNUP_BASE_EMAIL }}
           AUTH_SESSION_B64: ${{ secrets.AUTH_SESSION_B64 }}
+          TARGET_APP_URL: ${{ secrets.TARGET_APP_URL || vars.TARGET_APP_URL }}
+          TARGET_SSO_URL: ${{ secrets.TARGET_SSO_URL || vars.TARGET_SSO_URL }}
         run: |
           set -euo pipefail
           for attempt in 1 2 3; do

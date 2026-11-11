@@ -89,7 +89,7 @@ CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
   manual dispatch (Actions tab → Playwright → Run workflow; choose the browser and an optional `max_skipped` gate); there is no scheduled run. They are not run on every push
   because each run hits the live site and repeated logins trigger the captcha. Each run uploads the HTML report and
   traces and shows the skipped / known-issue / flaky lists in the job summary.
-  Required repository **variables**: `TARGET_APP_URL` and `TARGET_SSO_URL` (Settings → Secrets and variables → Actions → Variables).
+  Required: `TARGET_APP_URL` and `TARGET_SSO_URL`, as repository **secrets** (masked in public logs and redacted from the report) or as variables (Settings → Secrets and variables → Actions).
   Optional repository secrets: `AUTH_TEST_USERNAME`, `AUTH_TEST_PASSWORD`, `SIGNUP_BASE_EMAIL`, and
   `AUTH_SESSION_B64` (a gzip + base64 copy of `.auth/user.json` for `AF-LOGIN-03`; compressed because a plain base64 copy is ~54 KB, over GitHub's 48 KB secret limit; it holds live tokens and expires).
   GitHub's cloud IPs may meet the captcha more often, so expect more skips there. Not yet run on GitHub.
