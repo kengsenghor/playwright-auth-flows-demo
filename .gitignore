@@ -1,0 +1,13 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+.auth/
+.env
+*.log
+
+.claude/
+.omc/
+~$*
+.DS_Store
+

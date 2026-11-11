@@ -1,0 +1,27 @@
+{
+  "name": "playwright-auth-flows-demo",
+  "version": "1.0.0",
+  "description": "Playwright + TypeScript demo: BDD-style steps on Page Objects for signup and login flows behind Auth0",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "install:browsers": "npx playwright install --with-deps",
+    "typecheck": "tsc --noEmit",
+    "test": "npx playwright test --project=chromium",
+    "test:headed": "npx playwright test --project=chromium --headed",
+    "auth:save": "node scripts/auth-save.mjs",
+    "test:login": "npx playwright test e2e-tests/specs/login --project=chromium",
+    "test:login:headed": "npx playwright test e2e-tests/specs/login.spec.ts --project=chromium --headed",
+    "test:login:manual": "MANUAL_CAPTCHA=1 npx playwright test e2e-tests/specs/login --project=chromium --headed --workers=1",
+    "test:signup": "npx playwright test e2e-tests/specs/signup.spec.ts --project=chromium",
+    "test:signup:headed": "npx playwright test e2e-tests/specs/signup.spec.ts --project=chromium --headed",
+    "test:ci": "CI=true npx playwright test --reporter=junit,list,html,./e2e-tests/reporters/run-summary.reporter.ts",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1",
+    "@types/node": "^22.10.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.2"
+  }
+}

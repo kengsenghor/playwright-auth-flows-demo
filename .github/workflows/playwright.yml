@@ -1,0 +1,238 @@
+name: Playwright
+
+# Tests hit the LIVE site configured in TARGET_APP_URL, so they run only on demand (repeated automated logins trigger the
+# site's captcha). Typecheck is cheap and offline, so it runs on every push and pull request.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: Playwright project to run
+        type: choice
+        options: [chromium, firefox, webkit]
+        default: chromium
+      max_skipped:
+        description: Optional - fail the run when more than this many tests are skipped
+        type: string
+        default: ''
+
+# Runner pinned: `ubuntu-latest` moves to Ubuntu 26.04 in Nov 2026, which this Playwright version does not support.
+permissions:
+  contents: read
+
+# A newer push may cancel an older push's typecheck, but never a manual test run (those live in their own
+# group), which would otherwise be cut off before its report is uploaded.
+concurrency:
+  group: playwright-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  tests:
+    needs: typecheck
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      BROWSER: ${{ inputs.browser || 'chromium' }}
+      MAX_SKIPPED: ${{ inputs.max_skipped }}
+      # Required repository variables (Settings > Secrets and variables > Actions > Variables): the site under test.
+      TARGET_APP_URL: ${{ vars.TARGET_APP_URL }}
+      TARGET_SSO_URL: ${{ vars.TARGET_SSO_URL }}
+      # Optional repository secrets (Settings > Secrets and variables > Actions). Tests that need them skip when unset.
+      AUTH_TEST_USERNAME: ${{ secrets.AUTH_TEST_USERNAME }}
+      AUTH_TEST_PASSWORD: ${{ secrets.AUTH_TEST_PASSWORD }}
+      SIGNUP_BASE_EMAIL: ${{ secrets.SIGNUP_BASE_EMAIL }}
+      AUTH_SESSION_B64: ${{ secrets.AUTH_SESSION_B64 }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps "$BROWSER"
+
+      # Optional saved login session for AF-LOGIN-03. Create the secret with:
+      #   gzip -9c .auth/user.json | base64 | tr -d '\n' | pbcopy
+      # (gzip first: a plain base64 session is ~54 KB, over GitHub's 48 KB secret limit). A plain base64 value is still
+      # accepted. It contains live tokens and expires, so it must be refreshed by hand.
+      - name: Restore saved session
+        run: |
+          if [ -n "$AUTH_SESSION_B64" ]; then
+            mkdir -p .auth
+            echo "$AUTH_SESSION_B64" | base64 --decode > .auth/session.bin
+            if gzip -t .auth/session.bin 2>/dev/null; then
+              gzip -dc .auth/session.bin > .auth/user.json
+            else
+              cp .auth/session.bin .auth/user.json
+            fi
+            rm -f .auth/session.bin
+          fi
+
+      - name: Run tests
+        run: npx playwright test --project="$BROWSER"
+
+      - name: Run summary
+        if: always()
+        run: node .github/scripts/run-summary-to-markdown.js >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report and traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-${{ env.BROWSER }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # A single-file copy of the HTML report that works WITHOUT GitHub Pages (useful while the repo is private).
+      # The same redaction as the Pages publisher: attachments removed, secret values replaced, and no file at all if a
+      # secret survives. It is a convenience, so a failure here never fails the run.
+      - name: Build standalone report (redacted, no attachments)
+        id: standalone
+        if: always()
+        continue-on-error: true
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          node .github/scripts/report-store.mjs \
+            --report playwright-report --store report-view-store \
+            --run-id "$GITHUB_RUN_ID" --run-number "$GITHUB_RUN_NUMBER" --run-url "$RUN_URL" \
+            --keep 1 --summary test-results/run-summary.json
+          mkdir -p report-view
+          cp report-view-store/latest/index.html report-view/playwright-report.html
+
+      # archive: false uploads the file as-is (not zipped), under its own file name.
+      - name: Upload standalone report
+        id: upload-view
+        if: always() && steps.standalone.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          path: report-view/playwright-report.html
+          archive: false
+          retention-days: 14
+
+      - name: Link the standalone report
+        if: always() && steps.upload-view.outcome == 'success'
+        run: |
+          {
+            echo "### Playwright report (one HTML file)"
+            echo "- Open: ${{ steps.upload-view.outputs.artifact-url }} (you must be signed in to GitHub)"
+            echo "- Traces, screenshots and videos are removed from this copy; the full report is in the playwright-${{ env.BROWSER }} artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Publishes the HTML report to GitHub Pages, with history: /<run id>/ per run, /latest/, and an index of the newest 5.
+  #
+  # OFF until you enable it (so a run is never red just because Pages is not set up):
+  #   1. Settings > Pages > Build and deployment > Source: GitHub Actions
+  #   2. Settings > Secrets and variables > Actions > Variables: PUBLISH_REPORT = true
+  # A Pages site is PUBLIC even for a private repository, and private-repo Pages needs a paid GitHub plan. So the
+  # published copy has every attachment removed (traces, screenshots, videos can hold typed credentials and the account
+  # email) and the exact secret values are redacted from the report data. If a secret survives, the job fails and nothing
+  # is published (see .github/scripts/report-store.mjs). The complete report stays in the run's artifact.
+  publish-report:
+    needs: tests
+    if: ${{ !cancelled() && needs.tests.result != 'skipped' && vars.PUBLISH_REPORT == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # pushes the gh-pages store branch
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}${{ github.run_id }}/
+    # Serialise publishers: two runs finishing together must not race on the gh-pages branch.
+    concurrency:
+      group: playwright-report-publish
+      cancel-in-progress: false
+    env:
+      BROWSER: ${{ inputs.browser || 'chromium' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v8
+        with:
+          name: playwright-${{ env.BROWSER }}
+          path: report-in
+
+      - name: Redact and add to the report store
+        env:
+          REPO_URL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # The values to redact; the same secrets the test job used.
+          AUTH_TEST_USERNAME: ${{ secrets.AUTH_TEST_USERNAME }}
+          AUTH_TEST_PASSWORD: ${{ secrets.AUTH_TEST_PASSWORD }}
+          SIGNUP_BASE_EMAIL: ${{ secrets.SIGNUP_BASE_EMAIL }}
+          AUTH_SESSION_B64: ${{ secrets.AUTH_SESSION_B64 }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            rm -rf store
+            tip=""
+            if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
+              git clone --quiet --depth 1 --branch gh-pages "$REPO_URL" store
+              tip=$(git -C store rev-parse HEAD)
+              rm -rf store/.git
+            fi
+            node .github/scripts/report-store.mjs \
+              --report report-in/playwright-report --store store \
+              --run-id "$GITHUB_RUN_ID" --run-number "$GITHUB_RUN_NUMBER" --run-url "$RUN_URL" \
+              --keep 5 --summary report-in/test-results/run-summary.json
+            git -C store init -q -b gh-pages
+            git -C store config user.name "github-actions[bot]"
+            git -C store config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C store add -A
+            git -C store commit -q -m "Playwright report for run $GITHUB_RUN_ID"
+            # Orphan commit each time: report history never grows the repository. The lease makes a concurrent
+            # publisher fail this push, and the loop re-fetches and re-merges instead of overwriting its report.
+            lease="--force-with-lease=gh-pages:$tip"
+            [ -n "$tip" ] || lease="--"
+            if git -C store push --quiet "$lease" "$REPO_URL" gh-pages:gh-pages; then
+              rm -rf store/.git
+              echo "published on attempt $attempt"
+              exit 0
+            fi
+            echo "push raced with another publisher (attempt $attempt); retrying"
+          done
+          echo "::error::could not push the gh-pages store after 3 attempts"
+          exit 1
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: store
+      - id: deploy
+        uses: actions/deploy-pages@v5
+
+      - name: Link the report
+        run: |
+          {
+            echo "### Playwright report"
+            echo "- This run: ${{ steps.deploy.outputs.page_url }}${{ github.run_id }}/"
+            echo "- Latest: ${{ steps.deploy.outputs.page_url }}latest/"
+            echo "- All runs: ${{ steps.deploy.outputs.page_url }}"
+            echo ""
+            echo "Traces, screenshots and videos are removed from the published copy; download the run artifact for them."
+          } >> "$GITHUB_STEP_SUMMARY"
