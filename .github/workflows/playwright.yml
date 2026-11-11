@@ -49,7 +49,13 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # Official image with browsers and system dependencies preinstalled, so the job has no apt step. The runner's
+    # Ubuntu mirror (azure.archive.ubuntu.com) stalled `playwright install --with-deps` for 8+ minutes on two runs.
+    # Keep this tag equal to the @playwright/test version in package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.49.1-noble
     env:
+      HOME: /root # Firefox needs a writable HOME inside the container
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
       MAX_SKIPPED: ${{ inputs.max_skipped }}
@@ -70,7 +76,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps "$BROWSER"
 
       # Optional saved login session for AF-LOGIN-03. Create the secret with:
       #   gzip -9c .auth/user.json | base64 | tr -d '\n' | pbcopy
