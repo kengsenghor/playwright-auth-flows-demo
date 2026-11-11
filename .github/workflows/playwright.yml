@@ -16,6 +16,10 @@ on:
         description: Optional - fail the run when more than this many tests are skipped
         type: string
         default: ''
+      run_live_signup:
+        description: Run AF-SIGNUP-06, which submits a REAL signup (needs the SIGNUP_BASE_EMAIL secret; skips on a captcha)
+        type: boolean
+        default: false
 
 # Runner pinned: `ubuntu-latest` moves to Ubuntu 26.04 in Nov 2026, which this Playwright version does not support.
 permissions:
@@ -49,6 +53,7 @@ jobs:
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
       MAX_SKIPPED: ${{ inputs.max_skipped }}
+      RUN_LIVE_SIGNUP: ${{ inputs.run_live_signup && '1' || '' }}
       # Required: the site under test. Store them as repository secrets (masked in public logs and redacted from the
       # published report) or, alternatively, as repository variables.
       TARGET_APP_URL: ${{ secrets.TARGET_APP_URL || vars.TARGET_APP_URL }}

@@ -149,7 +149,7 @@ For an expired session, captcha wall, locked account or leaked secret, follow [`
 Workflow: `.github/workflows/playwright.yml`.
 
 - Typecheck runs on every push and pull request.
-- Tests run on **manual dispatch** (Actions tab, Playwright, Run workflow; pick the browser and an optional `max_skipped`)
+- Tests run on **manual dispatch** (Actions tab, Playwright, Run workflow; pick the browser, an optional `max_skipped`, and whether to run the live signup `AF-SIGNUP-06`)
   (no scheduled run). They do not run on every push, because each run hits the live site.
 - Find the report: Actions tab, open the run, **Summary** page, **Playwright report (one HTML file)**, **Open**. The full
   report with traces is under **Artifacts** (kept 14 days).

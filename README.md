@@ -86,7 +86,7 @@ npm run report              # open the last HTML report
 CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
 
 - **Runs:** typecheck on every push and pull request; the tests run on
-  manual dispatch (Actions tab → Playwright → Run workflow; choose the browser and an optional `max_skipped` gate); there is no scheduled run. They are not run on every push
+  manual dispatch (Actions tab → Playwright → Run workflow; choose the browser, an optional `max_skipped` gate, and whether to run the live signup `AF-SIGNUP-06`, off by default); there is no scheduled run. They are not run on every push
   because each run hits the live site and repeated logins trigger the captcha. Each run uploads the HTML report and
   traces and shows the skipped / known-issue / flaky lists in the job summary.
   Required: `TARGET_APP_URL` and `TARGET_SSO_URL`, as repository **secrets** (masked in public logs and redacted from the report) or as variables (Settings → Secrets and variables → Actions).
