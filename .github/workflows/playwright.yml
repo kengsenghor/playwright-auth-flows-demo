@@ -115,9 +115,20 @@ jobs:
       # A single-file copy of the HTML report that works WITHOUT GitHub Pages (useful while the repo is private).
       # The same redaction as the Pages publisher: attachments removed, secret values replaced, and no file at all if a
       # secret survives. It is a convenience, so a failure here never fails the run.
+      # report-store.mjs shells out to `zip` / `unzip`, which the Playwright image does not include. Bounded and
+      # non-fatal: the apt mirror has hung before, and this only affects the optional standalone report.
+      - name: Install zip and unzip for the standalone report
+        id: ziptools
+        if: always()
+        timeout-minutes: 3
+        continue-on-error: true
+        run: |
+          apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update
+          apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y --no-install-recommends zip unzip
+
       - name: Build standalone report (redacted, no attachments)
         id: standalone
-        if: always()
+        if: always() && steps.ziptools.outcome == 'success'
         continue-on-error: true
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
