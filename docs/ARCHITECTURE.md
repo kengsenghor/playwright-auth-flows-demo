@@ -160,6 +160,9 @@ Each record: context, decision, consequences. Status is **Accepted** unless note
 - **Context:** Each run hits the live site; frequent runs raise captcha rates.
 - **Decision:** Typecheck runs on every push and pull request. Tests run on `workflow_dispatch` only; there is no scheduled run, which also keeps a public repository from hitting the live site unattended.
   The runner is pinned to `ubuntu-24.04` because `ubuntu-latest` moves to a release this Playwright version does not support.
+  The `tests` job runs in the official `mcr.microsoft.com/playwright:v<version>-noble` container (browsers and system
+  dependencies preinstalled) because `playwright install --with-deps` hung on the runner's apt mirror; keep the image tag equal to
+  the `@playwright/test` version.
 - **Consequences:** A broken test is found at the next manual run, not on the commit that broke it.
 
 ### ADR-009: Report publishing is a redacted single file; Pages is off
