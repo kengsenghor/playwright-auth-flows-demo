@@ -12,7 +12,7 @@ Design context is in [`ARCHITECTURE.md`](ARCHITECTURE.md); setup is in [`ONBOARD
 | Goal | How |
 | --- | --- |
 | Typecheck | Automatic on every push and pull request (`npm run typecheck`). |
-| Run tests on GitHub | Automatic on every push; or Actions tab → **Playwright** → **Run workflow**. Pick the browser; optionally set `max_skipped`. |
+| Run tests on GitHub | Automatic on every push; or Actions tab → **Playwright** → **Run workflow**. Pick the browser; optionally set `test_filter` (for example `AF-SIGNUP-04`, a regular expression on the title) and `max_skipped`. |
 | Find the report | Open the run → **Summary** page → **Playwright report (one HTML file)** → **Open** (sign in to GitHub). Full report with traces: **Artifacts** → `playwright-<browser>` (14 days). |
 | Read the run summary | Same Summary page: skipped, known-issue and flaky tests with reasons. |
 
