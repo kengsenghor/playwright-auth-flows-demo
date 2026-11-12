@@ -66,7 +66,7 @@ jobs:
     # Ubuntu mirror (azure.archive.ubuntu.com) stalled `playwright install --with-deps` for 8+ minutes on two runs.
     # Keep this tag equal to the @playwright/test version in package.json.
     container:
-      image: mcr.microsoft.com/playwright:v1.49.1-noble
+      image: mcr.microsoft.com/playwright:v1.55.1-noble
     env:
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
