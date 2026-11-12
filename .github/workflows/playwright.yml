@@ -55,7 +55,6 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.49.1-noble
     env:
-      HOME: /root # Firefox needs a writable HOME inside the container
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
       MAX_SKIPPED: ${{ inputs.max_skipped }}
@@ -94,8 +93,11 @@ jobs:
             rm -f .auth/session.bin
           fi
 
+      # Firefox needs a writable HOME inside the container (the runner sets /github/home). Set it on the command, not in
+      # the job `env`: a job-level HOME leaks to the host runner's docker CLI, which then warns on every step with
+      # "Error loading config file: open /root/.docker/config.json: permission denied".
       - name: Run tests
-        run: npx playwright test --project="$BROWSER"
+        run: HOME=/root npx playwright test --project="$BROWSER"
 
       - name: Run summary
         if: always()
