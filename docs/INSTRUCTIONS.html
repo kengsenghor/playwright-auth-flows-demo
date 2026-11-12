@@ -47,12 +47,14 @@
 <div class="wrap">
 
 <h1>Reviewer walkthrough</h1>
-<p class="lead">Playwright + TypeScript automation for the signup and login flows of a configured website. This page is only a short entry point; the details live in the documents below.</p>
+<p class="lead">Playwright + TypeScript automation for the signup and login flows of a configured website. This page is a short summary for reading offline; the details live in the repository: <a href="https://github.com/kengsenghor/playwright-auth-flows-demo">github.com/kengsenghor/playwright-auth-flows-demo</a>.</p>
 
 <section id="quick">
   <h2>Quick start</h2>
-  <p>Needs Node.js 22+ and network access to the site under test. Set <code>TARGET_APP_URL</code> and <code>TARGET_SSO_URL</code> in <code>.env</code> (see <code>.env.example</code>). Full setup: <code>docs/ONBOARDING.md</code>.</p>
-<pre><code>npm ci
+  <p>Needs Node.js 22+ and network access to the site under test. Set <code>TARGET_APP_URL</code> and <code>TARGET_SSO_URL</code> in <code>.env</code> (see <code>.env.example</code>). Full setup: <a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ONBOARDING.md">ONBOARDING.md</a>.</p>
+<pre><code>git clone https://github.com/kengsenghor/playwright-auth-flows-demo.git
+cd playwright-auth-flows-demo
+npm ci
 npx playwright install --with-deps chromium
 npm run typecheck
 npm test            # chromium
@@ -64,11 +66,11 @@ npm run report      # open the HTML report</code></pre>
   <h2>Where to read more</h2>
   <table>
     <tr><th>Question</th><th>Read</th></tr>
-    <tr><td>What is automated, setup, commands, the CI inputs</td><td><code>README.md</code> and <code>docs/ONBOARDING.md</code></td></tr>
-    <tr><td>Design, layer rules, what runs where, decisions</td><td><code>docs/ARCHITECTURE.md</code></td></tr>
-    <tr><td>Something failed (expired session, captcha, lockout, leaked secret)</td><td><code>docs/RUNBOOKS.md</code></td></tr>
-    <tr><td>Pull request checklist and standards</td><td><code>docs/CONTRIBUTING.md</code></td></tr>
-    <tr><td>Rules for AI coding agents</td><td><code>docs/AGENT.md</code></td></tr>
+    <tr><td>What is automated, setup, commands, the CI inputs</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo#readme">README.md</a> and <a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ONBOARDING.md">ONBOARDING.md</a></td></tr>
+    <tr><td>Design, layer rules, what runs where, decisions</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ARCHITECTURE.md">ARCHITECTURE.md</a></td></tr>
+    <tr><td>Something failed (expired session, captcha, lockout, leaked secret)</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/RUNBOOKS.md">RUNBOOKS.md</a></td></tr>
+    <tr><td>Pull request checklist and standards</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/CONTRIBUTING.md">CONTRIBUTING.md</a></td></tr>
+    <tr><td>Rules for AI coding agents</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/AGENT.md">AGENT.md</a></td></tr>
   </table>
 </section>
 
@@ -77,11 +79,11 @@ npm run report      # open the HTML report</code></pre>
   <ul>
     <li><strong>Secrets.</strong> <code>.env</code> and <code>.auth/user.json</code> (live tokens) are git-ignored; never commit or share them.</li>
     <li><strong>Live signup</strong> (<code>AF-SIGNUP-06</code>) creates a real account and is off by default.</li>
-    <li><strong>Known issue.</strong> <code>AF-SIGNUP-04</code> (terms not accepted) is intermittent on the site; see the README.</li>
+    <li><strong>Known issue.</strong> <code>AF-SIGNUP-04</code> (terms not accepted) is intermittent on the site; see the <a href="https://github.com/kengsenghor/playwright-auth-flows-demo#readme">README</a>.</li>
   </ul>
 </section>
 
-<footer>If anything here drifts, the README and the documents above are the source of truth.</footer>
+<footer>If anything here drifts, the repository documents above are the source of truth.</footer>
 </div>
 </body>
 </html>
