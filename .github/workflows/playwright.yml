@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       browser:
-        description: Playwright project to run
+        description: 'Browser to run (all = chromium, firefox and webkit)'
         type: choice
-        options: [chromium, firefox, webkit]
+        options: [chromium, firefox, webkit, all]
         default: chromium
       test_filter:
         description: 'Test title regex, e.g. AF-SIGNUP-04 (empty = all)'
@@ -115,7 +115,11 @@ jobs:
       - name: Run tests
         # Inputs arrive as env vars (never spliced into the script) and are validated before use.
         run: |
-          set -- --project="$BROWSER"
+          if [ "$BROWSER" = all ]; then
+            set -- --project=chromium --project=firefox --project=webkit
+          else
+            set -- --project="$BROWSER"
+          fi
           if [ -n "$TEST_FILTER" ]; then set -- "$@" --grep "$TEST_FILTER"; fi
           case "$REPEAT_EACH" in
             '') ;;
