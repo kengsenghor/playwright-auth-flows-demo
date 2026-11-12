@@ -69,7 +69,7 @@ npx playwright install --with-deps chromium
 npm run typecheck
 npm test            # chromium only</code></pre>
   <p>Then open the report with <code>npm run report</code>.</p>
-  <div class="note warn"><strong>The suite runs against the live production site.</strong> Run it once, not in a loop or with <code>--repeat-each</code>: repeated automated logins trigger the site's captcha, which then makes some tests skip (see below). Wait a while if that happens.</div>
+  <div class="note warn"><strong>The suite runs against the live production site.</strong> Run it once, not in a loop or with <code>--repeat-each</code>: repeated automated logins trigger the site's captcha, which then makes some tests skip (see below). Wait a while if that happens. The manual GitHub run has deliberate, capped <code>repeat_each</code> (1 to 10) and <code>workers</code> (1 to 4) inputs; use them with <code>test_filter</code>, not on the whole suite.</div>
 </section>
 
 <section id="expect">
@@ -77,7 +77,8 @@ npm test            # chromium only</code></pre>
   <p>16 tests. With a fresh clone (no <code>.env</code>, no saved session) the expected result is <strong>about 11&ndash;13 passed, 3&ndash;5 skipped, 0 failed</strong>. Skips are deliberate; each reports its reason, and the run ends with a summary that lists them.</p>
   <table>
     <tr><th>Test</th><th>Fresh clone</th><th>Why</th></tr>
-    <tr><td><code>AF-LOGIN-01, 02, 06</code>, <code>AF-SIGNUP-01, 02, 03&times;4, 04, 05</code></td><td><span class="tag ok">runs</span></td><td>Public pages, no account needed. 11 tests. <code>AF-SIGNUP-04</code> checks that an unticked terms box is rejected.</td></tr>
+    <tr><td><code>AF-LOGIN-01, 02, 06, 08&times;2</code>, <code>AF-SIGNUP-01, 02, 03&times;7, 04, 05</code></td><td><span class="tag ok">runs</span></td><td>Public pages, no account needed. 16 tests. <code>AF-LOGIN-08</code> checks that Google and Apple sign-in hand off to the right provider host without loading the provider. <code>AF-SIGNUP-04</code> checks that an unticked terms box is rejected; the site enforces this intermittently, so it can fail or flake (see the README).</td></tr>
+    <tr><td><code>AF-LOGIN-07</code> &times;3 identifier format</td><td><span class="tag ok">runs</span> or <span class="tag warn">skipped</span></td><td>Skips if the site shows a captcha, which replaces the format message.</td></tr>
     <tr><td><code>AF-LOGIN-03</code> valid login</td><td><span class="tag warn">skipped</span></td><td>Needs a saved login session (<code>.auth/user.json</code>), created once by a person. See &ldquo;Optional&rdquo; below.</td></tr>
     <tr><td><code>AF-LOGIN-04</code> &times;2 invalid credentials</td><td><span class="tag ok">runs</span> or <span class="tag warn">skipped</span></td><td>Skips if the site shows a captcha instead of the password step.</td></tr>
     <tr><td><code>AF-LOGIN-05</code> wrong password</td><td><span class="tag warn">skipped</span></td><td>Needs <code>AUTH_TEST_USERNAME</code> / <code>AUTH_TEST_PASSWORD</code>, and skips on a captcha.</td></tr>
@@ -153,10 +154,11 @@ npm run report              # open the last HTML report</code></pre>
   <h2>6. Cautions</h2>
   <ul>
     <li><strong>Live site.</strong> Results depend on the site's availability. Avoid repeat loops against production.</li>
+    <li><code>AF-SIGNUP-04</code> (terms not accepted) is intermittent on the site: it failed on 3 of 35 recorded attempts on 2026-11-12. It is reported as a defect; the assertion is not loosened.</li>
     <li><strong>Live signup</strong> creates a real account request and sends real email. It is off by default.</li>
     <li><strong><code>.auth/user.json</code> contains live tokens.</strong> It is git-ignored; never commit or share it. <code>.env</code> is git-ignored too.</li>
-    <li>Publishing the report to GitHub Pages is disabled for now (private repo). To read a CI report: Actions tab &rarr; the run &rarr; <strong>Summary</strong> page &rarr; <em>Playwright report (one HTML file)</em> &rarr; <strong>Open</strong>. Traces, screenshots and videos are removed from that copy and secrets are redacted; the full report is the <code>playwright-chromium</code> artifact at the bottom of the same page.</li>
-    <li>The GitHub Actions workflow runs the tests only on manual dispatch; pushes run the typecheck only.</li>
+    <li>After the tests on <code>main</code>, the report is also published to GitHub Pages (redacted, no attachments; the repository and the Pages site are public). Branch runs are not published. To read any CI report: Actions tab &rarr; the run &rarr; <strong>Summary</strong> page &rarr; <em>Playwright report (one HTML file)</em> &rarr; <strong>Open</strong>. Traces, screenshots and videos are removed from that copy and secrets are redacted; the full report is the <code>playwright-&lt;browser&gt;</code> artifact at the bottom of the same page (<code>playwright-all</code> when all three browsers ran, as one consolidated report).</li>
+    <li>The GitHub Actions workflow runs the typecheck on every push and pull request, and the tests on every push and on manual dispatch. A manual run can set the browser (one, or <code>all</code>), <code>test_filter</code> (a title regex, e.g. <code>AF-SIGNUP-04</code>), <code>repeat_each</code> (1 to 10), <code>workers</code> (1 to 4), <code>max_skipped</code> and <code>run_live_signup</code>.</li>
     <li>Do not run the manual-assist mode in CI: it needs a person at the browser.</li>
   </ul>
 </section>
