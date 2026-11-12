@@ -7,6 +7,7 @@ import { PageHelper } from '../helper/page.helper';
 export default class LoginSteps {
   private readonly page: Page;
   private readonly loginPage: LoginPage;
+  private providerHost = '';
 
   constructor(page: Page) {
     this.page = page;
@@ -123,6 +124,20 @@ export default class LoginSteps {
       }
       throw error;
     }
+  }
+
+  async WhenIContinueWithProvider(provider: 'Google' | 'Apple', providerHost: string) {
+    this.providerHost = await this.loginPage.clickSocialAndGetProviderHost(provider, providerHost);
+  }
+
+  /** The identifier step rejects the value on format alone; no password step is reached. */
+  async ThenTheIdentifierFormatShouldBeRejected() {
+    await expect(this.loginPage.visibleErrors.first()).toContainText(/Username can only contain alphanumeric characters/i);
+    await expect(this.page).toHaveURL(/\/u\/login\/identifier/);
+  }
+
+  async ThenIShouldBeSentToTheProvider(expectedHost: string) {
+    expect(this.providerHost).toBe(expectedHost);
   }
 
   async WhenIClickSignUpLink() {

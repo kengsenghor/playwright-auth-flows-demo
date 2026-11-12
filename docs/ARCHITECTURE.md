@@ -83,7 +83,7 @@ flowchart LR
 
 | Test | Headless / CI | Manual-assist (`test:login:manual`) |
 | --- | --- | --- |
-| `AF-LOGIN-01`, `02`, `06`, `AF-SIGNUP-01`, `02`, `03`×4, `04`, `05` | Runs | Runs |
+| `AF-LOGIN-01`, `02`, `06`, `07`×3, `08`×2, `AF-SIGNUP-01`, `02`, `03`×7, `04`, `05` | Runs | Runs |
 | `AF-LOGIN-03` | Runs only if `.auth/user.json` exists; otherwise skipped | Same |
 | `AF-LOGIN-04`×2, `AF-LOGIN-05` | Runs unless a captcha appears, then skipped (`05` also needs credentials) | Runs; waits for a person at the captcha |
 | `AF-SIGNUP-06` | Opt-in; skipped if captcha | Opt-in; waits for a person |
