@@ -12,7 +12,7 @@ Design context is in [`ARCHITECTURE.md`](ARCHITECTURE.md); setup is in [`ONBOARD
 | Goal | How |
 | --- | --- |
 | Typecheck | Automatic on every push and pull request (`npm run typecheck`). |
-| Run tests on GitHub | Actions tab → **Playwright** → **Run workflow**. Pick the browser; optionally set `max_skipped`. |
+| Run tests on GitHub | Automatic on every push; or Actions tab → **Playwright** → **Run workflow**. Pick the browser; optionally set `max_skipped`. |
 | Find the report | Open the run → **Summary** page → **Playwright report (one HTML file)** → **Open** (sign in to GitHub). Full report with traces: **Artifacts** → `playwright-<browser>` (14 days). |
 | Read the run summary | Same Summary page: skipped, known-issue and flaky tests with reasons. |
 
@@ -65,8 +65,8 @@ Treat as an incident immediately: a committed `.env`, a pasted session, or a rep
 2. Delete and recreate the GitHub secrets (`AUTH_TEST_USERNAME`, `AUTH_TEST_PASSWORD`, `AUTH_SESSION_B64`).
 3. If it reached git history, remove it from history and force-push only with the repo owner's agreement; assume it was
    already read and rely on rotation, not deletion.
-4. If a report artifact or Pages site holds it, delete the artifact / unpublish. Pages sites are public even for private
-   repositories; keep `PUBLISH_REPORT` unset unless the redaction has been checked.
+4. If a report artifact or Pages site holds it, delete the artifact / unpublish. Pages sites are public; unpublish by
+   disabling Pages (Settings → Pages) and deleting the `gh-pages` branch.
 5. Note what leaked, when, and what was rotated.
 
 ### R6. A test is flaky or the site changed

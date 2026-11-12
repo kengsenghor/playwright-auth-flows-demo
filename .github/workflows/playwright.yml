@@ -1,7 +1,8 @@
 name: Playwright
 
-# Tests hit the LIVE site configured in TARGET_APP_URL, so they run only on demand (repeated automated logins trigger the
-# site's captcha). Typecheck is cheap and offline, so it runs on every push and pull request.
+# Typecheck runs on every push and pull request. The tests hit the LIVE site configured in TARGET_APP_URL, so they run on
+# every push (not on pull_request, which would double-run each commit and, for forks, run untrusted code) and on demand.
+# Repeated automated logins can trigger the site's captcha; such tests are skipped with a reason, never bypassed.
 on:
   push:
   pull_request:
@@ -25,11 +26,11 @@ on:
 permissions:
   contents: read
 
-# A newer push may cancel an older push's typecheck, but never a manual test run (those live in their own
-# group), which would otherwise be cut off before its report is uploaded.
+# A newer pull request commit may cancel the older one's run. A push run is never cancelled mid-flight (it would lose
+# its report); a newer push waits, and only the latest waiting one runs, so commits never hit the live site in parallel.
 concurrency:
   group: playwright-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   typecheck:
@@ -46,7 +47,7 @@ jobs:
 
   tests:
     needs: typecheck
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     # Official image with browsers and system dependencies preinstalled, so the job has no apt step. The runner's
@@ -161,16 +162,14 @@ jobs:
 
   # Publishes the HTML report to GitHub Pages, with history: /<run id>/ per run, /latest/, and an index of the newest 5.
   #
-  # OFF until you enable it (so a run is never red just because Pages is not set up):
-  #   1. Settings > Pages > Build and deployment > Source: GitHub Actions
-  #   2. Settings > Secrets and variables > Actions > Variables: PUBLISH_REPORT = true
-  # A Pages site is PUBLIC even for a private repository, and private-repo Pages needs a paid GitHub plan. So the
-  # published copy has every attachment removed (traces, screenshots, videos can hold typed credentials and the account
+  # Needs Settings > Pages > Build and deployment > Source: GitHub Actions (one-time). Only runs from main: the
+  # github-pages environment accepts deployments from the default branch only.
+  # A Pages site is PUBLIC, and so is this repository. The published copy has every attachment removed (traces, screenshots, videos can hold typed credentials and the account
   # email) and the exact secret values are redacted from the report data. If a secret survives, the job fails and nothing
   # is published (see .github/scripts/report-store.mjs). The complete report stays in the run's artifact.
   publish-report:
     needs: tests
-    if: ${{ !cancelled() && needs.tests.result != 'skipped' && vars.PUBLISH_REPORT == 'true' }}
+    if: ${{ !cancelled() && needs.tests.result != 'skipped' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
