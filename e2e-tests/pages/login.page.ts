@@ -71,6 +71,18 @@ export default class LoginPage {
     await this.signInButton.click();
   }
 
+  /**
+   * Clicks a social button and returns the host of the first request that leaves the site for the provider.
+   * The provider host is answered with an empty page, so the run never loads Google or Apple (it only observes the
+   * hand-off): the suite must not drive any site but the configured one.
+   */
+  async clickSocialAndGetProviderHost(provider: 'Google' | 'Apple', providerHost: string): Promise<string> {
+    await this.page.route(url => url.hostname === providerHost, route => route.fulfill({ status: 200, contentType: 'text/html', body: '' }));
+    const handOff = this.page.waitForRequest(request => new URL(request.url()).hostname === providerHost);
+    await (provider === 'Google' ? this.googleButton : this.appleButton).click();
+    return new URL((await handOff).url()).hostname;
+  }
+
   async clickSignUpLink() {
     await this.signUpLink.click();
   }
