@@ -14,23 +14,23 @@ on:
         options: [chromium, firefox, webkit]
         default: chromium
       test_filter:
-        description: Optional - run only tests whose title matches this (a regular expression), for example AF-SIGNUP-04. Empty runs everything
+        description: 'Test title regex, e.g. AF-SIGNUP-04 (empty = all)'
         type: string
         default: ''
       repeat_each:
-        description: Optional - run each selected test this many times (1-10). Every repeat logs in or signs up on the LIVE site and raises the captcha rate, so use it deliberately, with test_filter
+        description: 'Repeat each test 1-10 times (live site; use with test_filter)'
         type: string
         default: ''
       workers:
-        description: Optional - parallel workers (1-4). Empty uses the config default (2 on CI). More workers means more simultaneous live-site sessions
+        description: 'Parallel workers 1-4 (empty = 2)'
         type: string
         default: ''
       max_skipped:
-        description: Optional - fail the run when more than this many tests are skipped
+        description: 'Fail if more tests than this are skipped'
         type: string
         default: ''
       run_live_signup:
-        description: Run AF-SIGNUP-06, which submits a REAL signup (needs the SIGNUP_BASE_EMAIL secret; skips on a captcha)
+        description: 'Run AF-SIGNUP-06 (submits a REAL signup)'
         type: boolean
         default: false
 
@@ -113,12 +113,10 @@ jobs:
       # the job `env`: a job-level HOME leaks to the host runner's docker CLI, which then warns on every step with
       # "Error loading config file: open /root/.docker/config.json: permission denied".
       - name: Run tests
-        # TEST_FILTER reaches the shell as an environment variable, never spliced into the script text, so a value
-        # cannot inject commands. Playwright treats it as a regular expression on the test title.
+        # Inputs arrive as env vars (never spliced into the script) and are validated before use.
         run: |
           set -- --project="$BROWSER"
           if [ -n "$TEST_FILTER" ]; then set -- "$@" --grep "$TEST_FILTER"; fi
-          # The values are checked against fixed patterns before use, so anything else fails fast with a clear message.
           case "$REPEAT_EACH" in
             '') ;;
             [1-9]|10) set -- "$@" --repeat-each "$REPEAT_EACH" ;;
