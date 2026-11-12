@@ -47,121 +47,43 @@
 <div class="wrap">
 
 <h1>Reviewer walkthrough</h1>
-<p class="lead">A guide to reviewing this repository: Playwright + TypeScript automation for the signup and login flows of a configured website, as a demonstration of an honest Auth0 test suite. Allow about 30 minutes for a full walkthrough, or 10 for a quick look.</p>
-
-<nav>
-  <a href="#quick">Quick start</a>
-  <a href="#expect">What you will see</a>
-  <a href="#agenda">Suggested agenda</a>
-  <a href="#map">Question &rarr; where answered</a>
-  <a href="#cheat">Commands</a>
-  <a href="#docs">Documents</a>
-  <a href="#cautions">Cautions</a>
-</nav>
+<p class="lead">Playwright + TypeScript automation for the signup and login flows of a configured website. This page is a short summary for reading offline; the details live in the repository: <a href="https://github.com/kengsenghor/playwright-auth-flows-demo">github.com/kengsenghor/playwright-auth-flows-demo</a>.</p>
 
 <section id="quick">
-  <h2>1. Quick start (5 minutes)</h2>
-  <p>Needs Node.js 22+ (the version CI uses) and network access to the site you test. Set <code>TARGET_APP_URL</code> and <code>TARGET_SSO_URL</code> in <code>.env</code> (see <code>.env.example</code>); no account is required for the public-page tests. The framework was prepared and verified on <strong>macOS</strong> only; on Windows use WSL or Git Bash. A fuller setup guide for new contributors is in <code>docs/ONBOARDING.md</code>.</p>
-<pre><code>git clone https://github.com/kengsenghor/playwright-auth-flows-demo.git playwright-auth-flows-demo
+  <h2>Quick start</h2>
+  <p>Needs Node.js 22+ and network access to the site under test. Set <code>TARGET_APP_URL</code> and <code>TARGET_SSO_URL</code> in <code>.env</code> (see <code>.env.example</code>). Full setup: <a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ONBOARDING.md">ONBOARDING.md</a>.</p>
+<pre><code>git clone https://github.com/kengsenghor/playwright-auth-flows-demo.git
 cd playwright-auth-flows-demo
 npm ci
 npx playwright install --with-deps chromium
 npm run typecheck
-npm test            # chromium only</code></pre>
-  <p>Then open the report with <code>npm run report</code>.</p>
-  <div class="note warn"><strong>The suite runs against the live production site.</strong> Run it once, not in a loop or with <code>--repeat-each</code>: repeated automated logins trigger the site's captcha, which then makes some tests skip (see below). Wait a while if that happens.</div>
-</section>
-
-<section id="expect">
-  <h2>2. What you will see, and why</h2>
-  <p>16 tests. With a fresh clone (no <code>.env</code>, no saved session) the expected result is <strong>about 11&ndash;13 passed, 3&ndash;5 skipped, 0 failed</strong>. Skips are deliberate; each reports its reason, and the run ends with a summary that lists them.</p>
-  <table>
-    <tr><th>Test</th><th>Fresh clone</th><th>Why</th></tr>
-    <tr><td><code>AF-LOGIN-01, 02, 06</code>, <code>AF-SIGNUP-01, 02, 03&times;4, 04, 05</code></td><td><span class="tag ok">runs</span></td><td>Public pages, no account needed. 11 tests. <code>AF-SIGNUP-04</code> checks that an unticked terms box is rejected.</td></tr>
-    <tr><td><code>AF-LOGIN-03</code> valid login</td><td><span class="tag warn">skipped</span></td><td>Needs a saved login session (<code>.auth/user.json</code>), created once by a person. See &ldquo;Optional&rdquo; below.</td></tr>
-    <tr><td><code>AF-LOGIN-04</code> &times;2 invalid credentials</td><td><span class="tag ok">runs</span> or <span class="tag warn">skipped</span></td><td>Skips if the site shows a captcha instead of the password step.</td></tr>
-    <tr><td><code>AF-LOGIN-05</code> wrong password</td><td><span class="tag warn">skipped</span></td><td>Needs <code>AUTH_TEST_USERNAME</code> / <code>AUTH_TEST_PASSWORD</code>, and skips on a captcha.</td></tr>
-    <tr><td><code>AF-SIGNUP-06</code> live signup</td><td><span class="tag warn">skipped</span></td><td>Opt-in: it submits a real signup. Needs <code>RUN_LIVE_SIGNUP=1</code> and <code>SIGNUP_BASE_EMAIL</code>.</td></tr>
-  </table>
-  <p>A skip means <em>not verified</em>, not <em>passed</em>. The README says the same. An occasional timeout failure can also come from the live site (the SSO redirect and a third-party stylesheet were observed to stall); the page objects retry navigation, which reduced but did not remove this.</p>
-
-  <h3>Optional: see the full set run</h3>
-  <ul>
-    <li><strong>Valid login (<code>AF-LOGIN-03</code>):</strong> run <code>npm run auth:save</code>, log in by hand in the browser that opens (solve the captcha yourself), close it, then <code>npx playwright test login-session --project=chromium</code>. This needs an account you own on the site under test.</li>
-    <li><strong>Manual-assist mode:</strong> with credentials in <code>.env</code> (copy <code>.env.example</code>), <code>npm run test:login:manual</code> opens a headed browser and pauses at a captcha so you can solve it, then the test continues and really checks the credentials.</li>
-  </ul>
-</section>
-
-<section id="agenda">
-  <h2>3. Suggested agenda (30 minutes)</h2>
-  <table>
-    <tr><th>Time</th><th>Open</th><th>Look for</th></tr>
-    <tr><td class="time">3 min</td><td><code>README.md</code> (and <code>docs/ONBOARDING.md</code> for setup and conventions)</td><td>How the submission is organised and what is automated.</td></tr>
-    <tr><td class="time">5 min</td><td><code>docs/ARCHITECTURE.md</code></td><td>C4 diagrams, layer rules, the &ldquo;what runs where&rdquo; table and the architecture decision records.</td></tr>
-    <tr><td class="time">10 min</td><td>Code tour: <code>specs/login.spec.ts</code> &rarr; <code>steps/login.steps.ts</code> &rarr; <code>pages/login.page.ts</code></td><td>Specs read as scenarios; steps hold assertions; page objects hold role/label locators. Then <code>data/</code>, <code>fixtures/test-data.fixture.ts</code>, <code>helper/</code>.</td></tr>
-    <tr><td class="time">3 min</td><td><code>playwright.config.ts</code>, <code>.github/workflows/playwright.yml</code></td><td>Timeouts, failure evidence (trace/screenshot/video), JUnit + HTML reports, pipeline jobs.</td></tr>
-    <tr><td class="time">4 min</td><td>Run <code>npm test</code> and open the report</td><td>Passes, labelled skips, and failure evidence if anything fails.</td></tr>
-  </table>
-</section>
-
-<section id="map">
-  <h2>4. Topic &rarr; where it lives</h2>
-  <table>
-    <tr><th>Topic</th><th>Code to show</th></tr>
-    <tr><td>Project setup</td><td><code>package.json</code>, <code>playwright.config.ts</code>, <code>tsconfig.json</code>, <code>.env.example</code></td></tr>
-    <tr><td>Test case planning (signup, login, valid + invalid credentials)</td><td><code>specs/*.spec.ts</code>, <code>data/login.ts</code>, <code>data/signup.ts</code></td></tr>
-    <tr><td>Locator strategy</td><td><code>pages/login.page.ts</code>, <code>pages/signup.page.ts</code></td></tr>
-    <tr><td>Waits and timing</td><td><code>helper/page.helper.ts</code>, <code>pages/*.page.ts</code> navigation, <code>steps/login.steps.ts</code></td></tr>
-    <tr><td>Test data management</td><td><code>helper/test-data.helper.ts</code>, <code>fixtures/test-data.fixture.ts</code></td></tr>
-    <tr><td>Reusability</td><td><code>steps/</code> (<code>WhenILoginWith</code>), <code>specs/login-session.spec.ts</code></td></tr>
-    <tr><td>CI integration</td><td><code>.github/workflows/playwright.yml</code></td></tr>
-    <tr><td>Error handling and reporting</td><td><code>playwright.config.ts</code> (<code>use</code> and <code>reporter</code>), <code>reporters/run-summary.reporter.ts</code></td></tr>
-  </table>
-</section>
-
-<section id="cheat">
-  <h2>5. Command cheat-sheet</h2>
-<pre><code>npm test                    # all specs, chromium
-npm run test:login          # login specs
-npm run test:signup         # signup specs
-npm run test:headed         # watch it run
-npm run test:login:manual   # local, headed: pause at the captcha so a person can solve it
-npm run auth:save           # one-time: save a login session to .auth/user.json
-npm run typecheck           # TypeScript check
-npm run report              # open the last HTML report</code></pre>
-  <table>
-    <tr><th>Variable (in <code>.env</code>)</th><th>Effect</th></tr>
-    <tr><td><code>AUTH_TEST_USERNAME</code> / <code>AUTH_TEST_PASSWORD</code></td><td>Enables <code>AF-LOGIN-05</code> (wrong-password check)</td></tr>
-    <tr><td><code>SIGNUP_BASE_EMAIL</code> + <code>RUN_LIVE_SIGNUP=1</code></td><td>Enables <code>AF-SIGNUP-06</code>, which submits a real signup</td></tr>
-    <tr><td><code>MANUAL_CAPTCHA=1</code></td><td>Manual-assist mode (headed runs only; ignored in headless and CI)</td></tr>
-  </table>
+npm test            # chromium
+npm run report      # open the HTML report</code></pre>
+  <div class="note warn"><strong>It runs against the live production site.</strong> Do not loop it: repeated logins trigger the site's captcha and those tests then skip. A skip means <em>not verified</em>, never passed.</div>
 </section>
 
 <section id="docs">
-  <h2>Other documents</h2>
+  <h2>Where to read more</h2>
   <table>
-    <tr><th>File</th><th>What it is</th></tr>
-    <tr><td><code>docs/ARCHITECTURE.md</code></td><td>C4 diagrams, layer rules, what runs where, architecture decision records.</td></tr>
-    <tr><td><code>docs/ONBOARDING.md</code></td><td>New developer setup, commands, how to add a test, how to debug.</td></tr>
-    <tr><td><code>docs/RUNBOOKS.md</code></td><td>Incident procedures (expired session, captcha, account lockout, leaked secret) and rollback.</td></tr>
-    <tr><td><code>docs/CONTRIBUTING.md</code></td><td>InnerSource guide: workflow, pull request checklist, code standards.</td></tr>
-    <tr><td><code>docs/AGENT.md</code></td><td>Project instructions for AI coding agents (loaded by <code>CLAUDE.md</code>).</td></tr>
+    <tr><th>Question</th><th>Read</th></tr>
+    <tr><td>What is automated, setup, commands, the CI inputs</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo#readme">README.md</a> and <a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ONBOARDING.md">ONBOARDING.md</a></td></tr>
+    <tr><td>Design, layer rules, what runs where, decisions</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ARCHITECTURE.md">ARCHITECTURE.md</a></td></tr>
+    <tr><td>Something failed (expired session, captcha, lockout, leaked secret)</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/RUNBOOKS.md">RUNBOOKS.md</a></td></tr>
+    <tr><td>Pull request checklist and standards</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/CONTRIBUTING.md">CONTRIBUTING.md</a></td></tr>
+    <tr><td>Rules for AI coding agents</td><td><a href="https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/AGENT.md">AGENT.md</a></td></tr>
   </table>
 </section>
 
 <section id="cautions">
-  <h2>6. Cautions</h2>
+  <h2>Cautions</h2>
   <ul>
-    <li><strong>Live site.</strong> Results depend on the site's availability. Avoid repeat loops against production.</li>
-    <li><strong>Live signup</strong> creates a real account request and sends real email. It is off by default.</li>
-    <li><strong><code>.auth/user.json</code> contains live tokens.</strong> It is git-ignored; never commit or share it. <code>.env</code> is git-ignored too.</li>
-    <li>Publishing the report to GitHub Pages is disabled for now (private repo). To read a CI report: Actions tab &rarr; the run &rarr; <strong>Summary</strong> page &rarr; <em>Playwright report (one HTML file)</em> &rarr; <strong>Open</strong>. Traces, screenshots and videos are removed from that copy and secrets are redacted; the full report is the <code>playwright-chromium</code> artifact at the bottom of the same page.</li>
-    <li>The GitHub Actions workflow runs the tests only on manual dispatch; pushes run the typecheck only.</li>
-    <li>Do not run the manual-assist mode in CI: it needs a person at the browser.</li>
+    <li><strong>Secrets.</strong> <code>.env</code> and <code>.auth/user.json</code> (live tokens) are git-ignored; never commit or share them.</li>
+    <li><strong>Live signup</strong> (<code>AF-SIGNUP-06</code>) creates a real account and is off by default.</li>
+    <li><strong>Known issue.</strong> <code>AF-SIGNUP-04</code> (terms not accepted) is intermittent on the site; see the <a href="https://github.com/kengsenghor/playwright-auth-flows-demo#readme">README</a>.</li>
   </ul>
 </section>
 
-<footer>The README is the source of truth if anything here drifts.</footer>
+<footer>If anything here drifts, the repository documents above are the source of truth.</footer>
 </div>
 </body>
 </html>
