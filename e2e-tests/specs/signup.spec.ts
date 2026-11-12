@@ -37,6 +37,12 @@ test.describe(suiteTitle, () => {
     // History: on 2026-11-09 the site advanced to /u/signup/password with the terms box unticked, so this case was
     // `fixme`. On 2026-11-10 it rejects the submit and flags the terms field, so it is a normal test again. If the
     // old behaviour returns, this fails on the visible terms error, which is the signal to raise it with product.
+    //
+    // Known issue since 2026-11-12: the old behaviour is back (seen in CI and locally). The email step advances to
+    // /u/signup/password with the terms box unticked and shows no terms error. The assertion is unchanged; `test.fail`
+    // marks the failure as expected, so the run summary lists it under known issues. When the site enforces the terms
+    // again, this test reports "expected to fail but passed": remove the line below then.
+    test.fail(true, 'Known issue: site accepts a valid email without the terms and advances to the password step; raise with product (since 2026-11-12)');
     await signupSteps.WhenIEnterEmail('test.terms.check@example.com');
     await signupSteps.WhenIClickSignUp();
     await signupSteps.ThenTheTermsShouldBeRequired();

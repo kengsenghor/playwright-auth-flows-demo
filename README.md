@@ -123,6 +123,7 @@ CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
 
 ## Known limitations (please read before running)
 
+- **Known issue: `AF-SIGNUP-04` (terms not enforced).** Since 2026-11-12 the site accepts a valid email with the terms box unticked and moves to the password step. The test keeps its assertion and is marked `test.fail`, so the run summary lists it under known issues. Remove the `test.fail` line in `signup.spec.ts` once the site enforces the terms again (the test then reports "expected to fail but passed").
 - **It runs against the live site.** There is no test environment, so results depend on the site's availability.
   The SSO redirect and the Auth0 stylesheet were observed to stall intermittently. The page objects retry navigation
   and wait for stylesheets, and ad/tracker hosts are blocked in the shared fixture. This **reduced** the flakiness but
