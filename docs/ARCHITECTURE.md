@@ -155,25 +155,24 @@ Each record: context, decision, consequences. Status is **Accepted** unless note
   Credentials come only from the environment.
 - **Consequences:** Created accounts must be cleaned up by hand (see the runbook).
 
-### ADR-008: Tests run on demand, not on every push
+### ADR-008: Tests run on every push and on demand
 
 - **Context:** Each run hits the live site; frequent runs raise captcha rates.
-- **Decision:** Typecheck runs on every push and pull request. Tests run on `workflow_dispatch` only; there is no scheduled run, which also keeps a public repository from hitting the live site unattended.
+- **Decision:** Typecheck runs on every push and pull request. Tests run on every push and on `workflow_dispatch`; pull requests only typecheck, so a commit is not tested twice and fork code never runs against the live site. Pushes are serialised (a running test job is not cancelled; only the newest waiting push runs). There is no scheduled run.
   The runner is pinned to `ubuntu-24.04` because `ubuntu-latest` moves to a release this Playwright version does not support.
   The `tests` job runs in the official `mcr.microsoft.com/playwright:v<version>-noble` container (browsers and system
   dependencies preinstalled) because `playwright install --with-deps` hung on the runner's apt mirror; keep the image tag equal to
   the `@playwright/test` version.
-- **Consequences:** A broken test is found at the next manual run, not on the commit that broke it.
+- **Consequences:** Every commit hits the live site, which raises the captcha rate; affected tests skip with a reason and show in the run summary.
 
-### ADR-009: Report publishing is a redacted single file; Pages is off
+### ADR-009: Reports are redacted; Pages publishing is on for main
 
-- **Context:** The repo is private; GitHub Pages sites are public and private-repo Pages needs a paid plan. Traces,
+- **Context:** The repo is public and GitHub Pages sites are public. Traces,
   screenshots and videos can hold typed credentials and the account email.
 - **Decision:** Every run uploads (a) the full report with traces, 14 days, and (b) a single redacted
   `playwright-report.html` (attachments removed, secret values replaced; no file at all if a secret survives) linked from
-  the run's Summary page. The `publish-report` job (GitHub Pages) runs only when the variable `PUBLISH_REPORT` is `true`.
-- **Consequences:** The report is one click away on a private repo. Enabling Pages needs a plan change and a decision
-  from the repo owner.
+  the run's Summary page. The `publish-report` job (GitHub Pages) runs after the tests on `main`; it needs Pages set to the *GitHub Actions* source.
+- **Consequences:** Anything that survives redaction becomes public, so keep the redaction check failing closed.
 
 ### ADR-010: GitHub Actions is the only CI
 
