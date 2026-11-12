@@ -85,9 +85,8 @@ npm run report              # open the last HTML report
 
 CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
 
-- **Runs:** typecheck on every push and pull request; the tests run on
-  manual dispatch (Actions tab → Playwright → Run workflow; choose the browser, an optional `max_skipped` gate, and whether to run the live signup `AF-SIGNUP-06`, off by default); there is no scheduled run. They are not run on every push
-  because each run hits the live site and repeated logins trigger the captcha. Each run uploads the HTML report and
+- **Runs:** typecheck on every push and pull request; the tests run on every push and on
+  manual dispatch (Actions tab → Playwright → Run workflow; choose the browser, an optional `max_skipped` gate, and whether to run the live signup `AF-SIGNUP-06`, off by default); there is no scheduled run. Pull requests only typecheck (the push run already covers the commit, and fork code never touches the live site). Each run hits the live site, so repeated logins can trigger the captcha; those tests skip with a reason. Each run uploads the HTML report and
   traces and shows the skipped / known-issue / flaky lists in the job summary.
   Required: `TARGET_APP_URL` and `TARGET_SSO_URL`, as repository **secrets** (masked in public logs and redacted from the report) or as variables (Settings → Secrets and variables → Actions).
   Optional repository secrets: `AUTH_TEST_USERNAME`, `AUTH_TEST_PASSWORD`, `SIGNUP_BASE_EMAIL`, and
@@ -114,11 +113,10 @@ CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
   (skipped / known-issue / flaky tests) and, under **Artifacts** at the bottom, both `playwright-report.html` and
   `playwright-<browser>` (the full report with traces, screenshots and videos, kept 14 days). The single-file copy has
   traces, screenshots and videos removed and secret values redacted.
-- **Published HTML report (GitHub Pages): disabled for now.** The repo is private and Pages on a private repo needs a
-  paid plan, so the `publish-report` job is switched off (it runs only when the repository variable `PUBLISH_REPORT` is
-  `true` and Pages is set to *GitHub Actions*). When enabled it puts each run's report at
+- **Published HTML report (GitHub Pages): enabled.** The repo is public, so the `publish-report` job runs after the
+  tests on `main` (one-time setup: Settings → Pages → Source: *GitHub Actions*). It puts each run's report at
   `https://<user>.github.io/<repo>/<run id>/`, with `/latest/` and an index of the newest 5 runs.
-  Pages sites are public even for private repositories (and private-repo Pages needs a paid plan), so the published copy
+  Pages sites are public, so the published copy
   has every attachment removed (traces, screenshots and videos can contain typed credentials and the account email),
   the exact secret values are redacted from the report data, and the job fails without publishing if one survives
   (`.github/scripts/report-store.mjs`). The complete report is always in the run's artifact.
