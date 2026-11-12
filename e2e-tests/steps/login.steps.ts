@@ -7,6 +7,7 @@ import { PageHelper } from '../helper/page.helper';
 export default class LoginSteps {
   private readonly page: Page;
   private readonly loginPage: LoginPage;
+  private providerHost = '';
 
   constructor(page: Page) {
     this.page = page;
@@ -123,6 +124,30 @@ export default class LoginSteps {
       }
       throw error;
     }
+  }
+
+  async WhenIContinueWithProvider(provider: 'Google' | 'Apple', providerHost: string) {
+    this.providerHost = await this.loginPage.clickSocialAndGetProviderHost(provider, providerHost);
+  }
+
+  /**
+   * The identifier step rejects the value on format alone; no password step is reached. While Auth0's bot protection
+   * shows a captcha, it answers "Please enter captcha code" instead, so the format rule cannot be observed: that is a
+   * skip with a reason (not verified), never a pass and never a bypass.
+   */
+  async ThenTheIdentifierFormatShouldBeRejected() {
+    const formatError = this.loginPage.visibleErrors.filter({ hasText: /Username can only contain alphanumeric characters/i });
+    await expect(formatError.or(this.loginPage.captchaInput).first()).toBeVisible();
+    test.skip(
+      await this.loginPage.isCaptchaVisible(),
+      'The site showed a captcha (Auth0 bot protection), which replaces the identifier format message; the rule was not verified'
+    );
+    await expect(formatError.first()).toBeVisible();
+    await expect(this.page).toHaveURL(/\/u\/login\/identifier/);
+  }
+
+  async ThenIShouldBeSentToTheProvider(expectedHost: string) {
+    expect(this.providerHost).toBe(expectedHost);
   }
 
   async WhenIClickSignUpLink() {
