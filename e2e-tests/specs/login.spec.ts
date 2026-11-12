@@ -38,6 +38,20 @@ test.describe(suiteTitle, () => {
     await loginSteps.ThenIShouldRemainOnTheLoginPage();
   });
 
+  for (const identifier of login.invalidIdentifiers) {
+    test(`AF-LOGIN-07 Identifier with an invalid format is rejected: "${identifier}"`, async () => {
+      await loginSteps.WhenISubmitIdentifier(identifier);
+      await loginSteps.ThenTheIdentifierFormatShouldBeRejected();
+    });
+  }
+
+  for (const provider of login.socialProviders) {
+    test(`AF-LOGIN-08 Continue with ${provider.name} hands off to the provider`, async () => {
+      await loginSteps.WhenIContinueWithProvider(provider.name, provider.host);
+      await loginSteps.ThenIShouldBeSentToTheProvider(provider.host);
+    });
+  }
+
   test('AF-LOGIN-06 Sign up link navigates to the signup form', async () => {
     await loginSteps.WhenIClickSignUpLink();
     await loginSteps.ThenIShouldBeOnTheSignupPage();

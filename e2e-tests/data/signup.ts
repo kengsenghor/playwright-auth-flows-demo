@@ -10,5 +10,5 @@ export class signup {
     return process.env.RUN_LIVE_SIGNUP === '1';
   }
 
-  public static invalidEmails = ['plainaddress', 'missing-at.example.com', 'two@@example.com', 'spaces in@example.com'];
+  public static invalidEmails = ['plainaddress', 'missing-at.example.com', 'two@@example.com', 'spaces in@example.com', 'invalid@', '@gmail.com', 'invalid@gmail'];
 }

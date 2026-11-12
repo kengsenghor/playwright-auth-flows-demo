@@ -21,8 +21,8 @@ Both entry URLs redirect to Auth0 universal login on the host in `TARGET_SSO_URL
 
 | Flow | Scenarios |
 | --- | --- |
-| **Signup** (`AF-SIGNUP-01…06`) | Form, legal links and social options render · empty submit rejected · four invalid email formats rejected · "Sign in" link · live signup with a unique email (opt-in, see below). `AF-SIGNUP-04` checks that an unticked terms box is rejected at the email step (on 2026-11-09 the site advanced without it; on 2026-11-10 it enforces it). |
-| **Login** (`AF-LOGIN-01…06`) | Form and social options render · empty identifier rejected · valid login reaches the app (via a saved session, see below) · invalid credentials rejected (data-driven) · valid email with a wrong password rejected · "Sign up" link |
+| **Signup** (`AF-SIGNUP-01…06`) | Form, legal links and social options render · empty submit rejected · seven invalid email formats rejected · "Sign in" link · live signup with a unique email (opt-in, see below). `AF-SIGNUP-04` checks that an unticked terms box is rejected at the email step (on 2026-11-09 the site advanced without it; on 2026-11-10 it enforces it). |
+| **Login** (`AF-LOGIN-01…08`) | Form and social options render · empty identifier rejected · valid login reaches the app (via a saved session, see below) · invalid credentials rejected (data-driven) · valid email with a wrong password rejected · "Sign up" link · identifiers with an invalid format rejected before any password step (`AF-LOGIN-07`) · Google and Apple buttons hand off to the right provider host (`AF-LOGIN-08`; the provider's page is never loaded, the request is answered with an empty page) |
 
 ### Structure
 
