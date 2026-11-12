@@ -158,7 +158,7 @@ Each record: context, decision, consequences. Status is **Accepted** unless note
 ### ADR-008: Tests run on every push and on demand
 
 - **Context:** Each run hits the live site; frequent runs raise captcha rates.
-- **Decision:** Typecheck runs on every push and pull request. Tests run on every push and on `workflow_dispatch`; pull requests only typecheck, so a commit is not tested twice and fork code never runs against the live site. Pushes are serialised (a running test job is not cancelled; only the newest waiting push runs). There is no scheduled run.
+- **Decision:** Typecheck runs on every push and pull request. Tests run on every push and on `workflow_dispatch`; pull requests only typecheck, so a commit is not tested twice and fork code never runs against the live site. Pushes are serialised (a running test job is not cancelled; only the newest waiting push runs). There is no scheduled run. A manual run can also set `test_filter` (a title regex), `repeat_each` (1 to 10) and `workers` (1 to 4), validated before use; they exist for deliberate stability checks and raise the captcha rate, so they are never set by default or by a script.
   The runner is pinned to `ubuntu-24.04` because `ubuntu-latest` moves to a release this Playwright version does not support.
   The `tests` job runs in the official `mcr.microsoft.com/playwright:v<version>-noble` container (browsers and system
   dependencies preinstalled) because `playwright install --with-deps` hung on the runner's apt mirror; keep the image tag equal to

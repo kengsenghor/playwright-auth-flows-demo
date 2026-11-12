@@ -21,7 +21,7 @@ Both entry URLs redirect to Auth0 universal login on the host in `TARGET_SSO_URL
 
 | Flow | Scenarios |
 | --- | --- |
-| **Signup** (`AF-SIGNUP-01…06`) | Form, legal links and social options render · empty submit rejected · seven invalid email formats rejected · "Sign in" link · live signup with a unique email (opt-in, see below). `AF-SIGNUP-04` checks that an unticked terms box is rejected at the email step (on 2026-11-09 the site advanced without it; on 2026-11-10 it enforces it). |
+| **Signup** (`AF-SIGNUP-01…06`) | Form, legal links and social options render · empty submit rejected · seven invalid email formats rejected · "Sign in" link · live signup with a unique email (opt-in, see below). `AF-SIGNUP-04` checks that an unticked terms box is rejected at the email step (on 2026-11-09 the site advanced without it; on 2026-11-10 it enforced it; on 2026-11-12 it was intermittent, failing on 3 of 35 recorded attempts, so the test can fail or flake and the assertion is not loosened). |
 | **Login** (`AF-LOGIN-01…08`) | Form and social options render · empty identifier rejected · valid login reaches the app (via a saved session, see below) · invalid credentials rejected (data-driven) · valid email with a wrong password rejected · "Sign up" link · identifiers with an invalid format rejected before any password step (`AF-LOGIN-07`) · Google and Apple buttons hand off to the right provider host (`AF-LOGIN-08`; the provider's page is never loaded, the request is answered with an empty page) |
 
 ### Structure
@@ -86,7 +86,7 @@ npm run report              # open the last HTML report
 CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
 
 - **Runs:** typecheck on every push and pull request; the tests run on every push and on
-  manual dispatch (Actions tab → Playwright → Run workflow; choose the browser, an optional `max_skipped` gate, and whether to run the live signup `AF-SIGNUP-06`, off by default); there is no scheduled run. Pull requests only typecheck (the push run already covers the commit, and fork code never touches the live site). Each run hits the live site, so repeated logins can trigger the captcha; those tests skip with a reason. Each run uploads the HTML report and
+  manual dispatch (Actions tab → Playwright → Run workflow; choose the browser (one, or `all` for chromium, firefox and webkit), an optional `test_filter` (a regular expression on the test title, for example `AF-SIGNUP-04` to run one scenario), an optional `repeat_each` (1 to 10) and `workers` (1 to 4), an optional `max_skipped` gate, and whether to run the live signup `AF-SIGNUP-06`, off by default); there is no scheduled run. Pull requests only typecheck (the push run already covers the commit, and fork code never touches the live site). Each run hits the live site, so repeated logins can trigger the captcha; those tests skip with a reason. Each run uploads the HTML report and
   traces and shows the skipped / known-issue / flaky lists in the job summary.
   Required: `TARGET_APP_URL` and `TARGET_SSO_URL`, as repository **secrets** (masked in public logs and redacted from the report) or as variables (Settings → Secrets and variables → Actions).
   Optional repository secrets: `AUTH_TEST_USERNAME`, `AUTH_TEST_PASSWORD`, `SIGNUP_BASE_EMAIL`, and
@@ -107,7 +107,7 @@ CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
   `auth:save` cannot run on CI (it needs a person to solve the captcha), so the saved session is created locally and
   uploaded. It expires: `AF-LOGIN-03` then fails with a message saying the session was rejected, and the secret needs
   refreshing. With credentials set, `AF-LOGIN-05` still skips whenever the captcha appears before the password step.
-- **Where to find the report (works on a private repo):** Actions tab → open the run → on the run's **Summary** page, the
+- **Where to find the report (any branch):** Actions tab → open the run → on the run's **Summary** page, the
   section **Playwright report (one HTML file)** has an **Open** link to `playwright-report.html` (sign in to GitHub; it
   opens inline in the browser, nothing to download). The same page lists the run summary
   (skipped / known-issue / flaky tests) and, under **Artifacts** at the bottom, both `playwright-report.html` and

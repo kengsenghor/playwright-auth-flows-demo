@@ -9,16 +9,28 @@ on:
   workflow_dispatch:
     inputs:
       browser:
-        description: Playwright project to run
+        description: 'Browser to run (all = chromium, firefox and webkit)'
         type: choice
-        options: [chromium, firefox, webkit]
+        options: [chromium, firefox, webkit, all]
         default: chromium
+      test_filter:
+        description: 'Test title regex, e.g. AF-SIGNUP-04 (empty = all)'
+        type: string
+        default: ''
+      repeat_each:
+        description: 'Repeat each test 1-10 times (live site; use with test_filter)'
+        type: string
+        default: ''
+      workers:
+        description: 'Parallel workers 1-4 (empty = 2)'
+        type: string
+        default: ''
       max_skipped:
-        description: Optional - fail the run when more than this many tests are skipped
+        description: 'Fail if more tests than this are skipped'
         type: string
         default: ''
       run_live_signup:
-        description: Run AF-SIGNUP-06, which submits a REAL signup (needs the SIGNUP_BASE_EMAIL secret; skips on a captcha)
+        description: 'Run AF-SIGNUP-06 (submits a REAL signup)'
         type: boolean
         default: false
 
@@ -49,7 +61,7 @@ jobs:
     needs: typecheck
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     # Official image with browsers and system dependencies preinstalled, so the job has no apt step. The runner's
     # Ubuntu mirror (azure.archive.ubuntu.com) stalled `playwright install --with-deps` for 8+ minutes on two runs.
     # Keep this tag equal to the @playwright/test version in package.json.
@@ -59,6 +71,9 @@ jobs:
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
       MAX_SKIPPED: ${{ inputs.max_skipped }}
+      TEST_FILTER: ${{ inputs.test_filter }}
+      REPEAT_EACH: ${{ inputs.repeat_each }}
+      WORKERS: ${{ inputs.workers }}
       RUN_LIVE_SIGNUP: ${{ inputs.run_live_signup && '1' || '' }}
       # Required: the site under test. Store them as repository secrets (masked in public logs and redacted from the
       # published report) or, alternatively, as repository variables.
@@ -98,7 +113,26 @@ jobs:
       # the job `env`: a job-level HOME leaks to the host runner's docker CLI, which then warns on every step with
       # "Error loading config file: open /root/.docker/config.json: permission denied".
       - name: Run tests
-        run: HOME=/root npx playwright test --project="$BROWSER"
+        # Inputs arrive as env vars (never spliced into the script) and are validated before use.
+        run: |
+          if [ "$BROWSER" = all ]; then
+            set -- --project=chromium --project=firefox --project=webkit
+          else
+            set -- --project="$BROWSER"
+          fi
+          if [ -n "$TEST_FILTER" ]; then set -- "$@" --grep "$TEST_FILTER"; fi
+          case "$REPEAT_EACH" in
+            '') ;;
+            [1-9]|10) set -- "$@" --repeat-each "$REPEAT_EACH" ;;
+            *) echo "::error::repeat_each must be a whole number from 1 to 10 (got: $REPEAT_EACH)"; exit 1 ;;
+          esac
+          case "$WORKERS" in
+            '') ;;
+            [1-4]) set -- "$@" --workers "$WORKERS" ;;
+            *) echo "::error::workers must be a whole number from 1 to 4 (got: $WORKERS)"; exit 1 ;;
+          esac
+          echo "playwright test $*"
+          HOME=/root npx playwright test "$@"
 
       - name: Run summary
         if: always()
