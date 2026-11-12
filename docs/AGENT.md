@@ -42,7 +42,9 @@ Scenario IDs (`AF-LOGIN-0n`, `AF-SIGNUP-0n`) are stable; take the next free numb
 ## Hard constraints
 
 - **Never point a run at anything but the configured site, and never loop against it.** No `--repeat-each`, no
-  retry-until-green scripts: repeated logins and signups trigger the captcha.
+  retry-until-green scripts: repeated logins and signups trigger the captcha. The one exception is the manual workflow
+  input `repeat_each` (1 to 10, with `test_filter`), which a person starts deliberately; an agent must not use it, or
+  start a run at all, unless asked.
 - **Never solve or bypass a captcha in code.** Skip with a reason, or use the local manual-assist mode.
 - **Never edit an assertion or a spec to make a failing test pass.** That masks a bug. Stop and report. Fix page
   objects or steps when the site changed.
