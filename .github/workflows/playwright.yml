@@ -61,7 +61,7 @@ jobs:
     needs: typecheck
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     # Official image with browsers and system dependencies preinstalled, so the job has no apt step. The runner's
     # Ubuntu mirror (azure.archive.ubuntu.com) stalled `playwright install --with-deps` for 8+ minutes on two runs.
     # Keep this tag equal to the @playwright/test version in package.json.
