@@ -27,7 +27,8 @@ import { execFileSync } from 'node:child_process';
 const SECRET_ENV_NAMES = ['AUTH_TEST_USERNAME', 'AUTH_TEST_PASSWORD', 'SIGNUP_BASE_EMAIL', 'AUTH_SESSION_B64', 'TARGET_APP_URL', 'TARGET_SSO_URL'];
 const MIN_SECRET_LENGTH = 4; // shorter values would mangle ordinary text
 
-const EMBED_RE = /(window\.playwrightReportBase64\s*=\s*")data:application\/zip;base64,([^"]*)(")/;
+// Playwright <= 1.54 embeds the zip in a JS assignment; >= 1.55 puts it in a <script id="playwrightReportBase64"> element.
+const EMBED_RE = /(window\.playwrightReportBase64\s*=\s*"|<script id="playwrightReportBase64"[^>]*>)data:application\/zip;base64,([^"<]*)("|<\/script>)/;
 
 function parseArgs(argv) {
   const args = {};
