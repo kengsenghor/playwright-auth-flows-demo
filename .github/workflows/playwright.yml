@@ -13,6 +13,10 @@ on:
         type: choice
         options: [chromium, firefox, webkit]
         default: chromium
+      test_filter:
+        description: Optional - run only tests whose title matches this (a regular expression), for example AF-SIGNUP-04. Empty runs everything
+        type: string
+        default: ''
       max_skipped:
         description: Optional - fail the run when more than this many tests are skipped
         type: string
@@ -59,6 +63,7 @@ jobs:
       CI: 'true'
       BROWSER: ${{ inputs.browser || 'chromium' }}
       MAX_SKIPPED: ${{ inputs.max_skipped }}
+      TEST_FILTER: ${{ inputs.test_filter }}
       RUN_LIVE_SIGNUP: ${{ inputs.run_live_signup && '1' || '' }}
       # Required: the site under test. Store them as repository secrets (masked in public logs and redacted from the
       # published report) or, alternatively, as repository variables.
@@ -98,7 +103,12 @@ jobs:
       # the job `env`: a job-level HOME leaks to the host runner's docker CLI, which then warns on every step with
       # "Error loading config file: open /root/.docker/config.json: permission denied".
       - name: Run tests
-        run: HOME=/root npx playwright test --project="$BROWSER"
+        # TEST_FILTER reaches the shell as an environment variable, never spliced into the script text, so a value
+        # cannot inject commands. Playwright treats it as a regular expression on the test title.
+        run: |
+          set -- --project="$BROWSER"
+          if [ -n "$TEST_FILTER" ]; then set -- "$@" --grep "$TEST_FILTER"; fi
+          HOME=/root npx playwright test "$@"
 
       - name: Run summary
         if: always()
