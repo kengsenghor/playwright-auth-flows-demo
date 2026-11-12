@@ -53,7 +53,7 @@ Scenario IDs (`AF-LOGIN-0n`, `AF-SIGNUP-0n`) are stable; take the next free numb
 - **No fake completion.** `test.skip` without a reason, `.only`, stub tests, TODO placeholders and unimplemented
   branches are blockers, not evidence. Skipped means *not verified*, never passed.
 - **Do not create accounts.** `AF-SIGNUP-06` is opt-in (`RUN_LIVE_SIGNUP=1`); do not enable it without being asked.
-- **Do not change repository visibility, push, or force-push without being asked.** The GitHub repository is private.
+- **Do not change repository visibility, push, or force-push without being asked.** The GitHub repository is public.
 
 ## Git
 

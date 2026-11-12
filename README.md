@@ -107,7 +107,7 @@ CI is **GitHub Actions only** (`.github/workflows/playwright.yml`).
   `auth:save` cannot run on CI (it needs a person to solve the captcha), so the saved session is created locally and
   uploaded. It expires: `AF-LOGIN-03` then fails with a message saying the session was rejected, and the secret needs
   refreshing. With credentials set, `AF-LOGIN-05` still skips whenever the captcha appears before the password step.
-- **Where to find the report (works on a private repo):** Actions tab → open the run → on the run's **Summary** page, the
+- **Where to find the report (any branch):** Actions tab → open the run → on the run's **Summary** page, the
   section **Playwright report (one HTML file)** has an **Open** link to `playwright-report.html` (sign in to GitHub; it
   opens inline in the browser, nothing to download). The same page lists the run summary
   (skipped / known-issue / flaky tests) and, under **Artifacts** at the bottom, both `playwright-report.html` and
