@@ -1,7 +1,7 @@
 # Contributing
 
 How to propose a change to this suite, InnerSource style: anyone may contribute, the owning team reviews and decides.
-Setup is in [`ONBOARDING.md`](ONBOARDING.md); the design rules are in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+Setup is in [`ONBOARDING.md`](https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ONBOARDING.md); the design rules are in [`ARCHITECTURE.md`](https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ARCHITECTURE.md).
 
 ## 1. Before you start
 
@@ -14,7 +14,7 @@ Setup is in [`ONBOARDING.md`](ONBOARDING.md); the design rules are in [`ARCHITEC
 ## 2. Workflow
 
 1. Branch from `main`: `feature/<short-name>` or `fix/<short-name>`.
-2. Make the change following [`ONBOARDING.md` §8](ONBOARDING.md) (page object → step → spec, next free scenario ID).
+2. Make the change following [`ONBOARDING.md` §8](https://github.com/kengsenghor/playwright-auth-flows-demo/blob/main/docs/ONBOARDING.md) (page object → step → spec, next free scenario ID).
 3. Verify locally:
 
    ```bash
